@@ -1,3 +1,11 @@
+THIS IS A STILL UNEDITED JOURNAL OF THE MOVIE PROJECT. 
+
+IT HELPS ME KEEP TRACK OF EVERYTHING, AND WHO KNOWS, MAYBE SOMEDAY I COULD SHARE IT OUT THERE. 
+
+'SCRIPTA MANENT' IS LATIN FOR 'WRITE IT DOWN TO TESTIFY THAT IT HAPPENED'. THIS JOURNAL IS A TESTIMONY TO THAT SPIRIT, AND TO THE SUFFERINGS THAT I HAD TO ENDURE TO CREATE MY ARTISANAL MOVIE DB. (*takes off the snooty socratic hat*)
+
+CAVUEAT: I HAVE A PROBLEMATIC TENDENCY TO IRONY. HOPE THIS DOES NOT COMPROMISE THE QUALITY OF WHAT'S BELOW. 
+
 ## Why this project?
 The idea is to create a big database of movies, by stitching together different sources extracted from the Great Sea of the Internet. 
 
@@ -156,7 +164,7 @@ I decided that all APIs happily stemming from the my movie suite would be based 
 
 #### What is CORS? 
 
-I present you *Cross-origin resource sharing*. Sure, not the friendliest name, but you'd better make friends with him, because that is what protects you go-lucky surfer .
+I present you *Cross-origin resource sharing*. Sure, not the friendliest name, but you'd better make friends with him, because that is what protects us happy-go-lucky internet surfers.
 CORS is a way to dictate how web pages can request resources (like data or content) from another domain (website). Resources can include images, styleshets, scripts; but also fonts, video and audio files, iframe content, or the endpoints of an API. 
 Resources-sharing is when a domain different from the one hosting those resources asks for them. For example, you might need to access to Spotify API for creating a playlist widget in your website. In that case, the resources are hosted somewhere else over the internet, in the Spotify domain, that's different from your domain. You'll need to ask for those resources to the Spotify server.
 
