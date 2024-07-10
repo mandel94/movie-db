@@ -1,0 +1,38 @@
+openapi: 3.0.3
+
+info:
+  title: Wiki API
+  version: v1
+  description: This is a simple API for a wiki application.
+
+servers:
+  - url: http://localhost:5000/v1
+
+paths:  
+  /test:
+    get:
+      summary: Test the API
+      description: Test the API to see if it is working.
+      responses:
+        200:
+          description: The API is working
+  /home:
+    get:
+      summary: Get the home page
+      description: Get the home page of the wiki.
+      responses:
+        200:
+          description: The home page of the wiki
+  /search/pages:
+    get:
+      summary: Search for a page
+      description: Search for a page by title.
+      parameters:
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The list of results matching the search query

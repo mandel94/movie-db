@@ -1,0 +1,65 @@
+name: movie_db
+
+services:
+  wiki_api_service:
+    build: ./wiki_api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./wiki_api:/app
+      - logs:/logs
+    networks:
+      - crawling_network
+      - open_api_network
+  crawling_service:
+    build: ./crawling_module
+    volumes:
+      - movie_data:/movie_data
+      - logs:/logs
+      - ./crawling_module:/app
+    networks:
+      - crawling_network
+    depends_on:
+      - wiki_api_service
+  movie_db:
+    image: postgres
+    container_name: movie_db
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456789
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    command: postgres >logfile 2>&1 &
+    ports:
+      - "5432:5432"
+  swagger_ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger_ui
+    ports:
+      - "80:8080"
+    environment:
+      SWAGGER_JSON: /app/open_api_spec.yaml
+    volumes:
+      - ./wiki_api/open_api_spec.yaml:/app/open_api_spec.yaml
+    networks:
+      - open_api_network
+    
+    
+
+networks:
+  crawling_network:
+    driver: bridge
+  open_api_network:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
+  movie_data:
+    driver: local
+  logs:
+    driver: local
+
+

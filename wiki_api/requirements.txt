@@ -1,0 +1,5 @@
+flask
+Flask-Cors
+flask-swagger
+python-dotenv
+requests
