@@ -10,10 +10,13 @@ class TestException(Exception):
 
 
 class WikiSearchPageError(Exception):
-    def __init__(self, search_query, cause=None):
-        self.err_header = "Error while searching for page with query: " + search_query + " ->"
-        self.cause = cause if cause else self.err_header
-        self.message = self.err_header + " " + self.cause
+    def __init__(self, search_query:str, cause=None):
+        if search_query:
+            self.err_header = "Error while searching for page with query: " + search_query + " ->"
+            self.cause = cause if cause else self.err_header
+            self.message = self.err_header + " " + self.cause
+        else:
+            raise ValueError("Some error occurred while searching for page")
         super().__init__(f"{self.__class__.__name__}: {self.message}")
 
 class PageError(Exception):

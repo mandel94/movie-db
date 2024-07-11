@@ -1,5 +1,4 @@
 import scrapy
-from dotenv import load_dotenv
 import re
 from scrapy.loader import ItemLoader
 from crawling_movies.items import MovieList
@@ -11,13 +10,15 @@ import uuid
 from thefuzz import fuzz
 from typing import Literal
 from utils import spider_logs_file, write_on_file
+import requests
 
-load_dotenv()
-
-wiki_base_url = "https://en.wikipedia.org/wiki/"
+# wiki_base_url = "https://en.wikipedia.org/wiki/"
 jw_movie_list_base_url = "https://www.justwatch.com/us/provider/max/movies?page="
 _jw_base_url = "https://www.justwatch.com/"
 _jw_movies_base_url = _jw_base_url + "movies/"
+wiki_client_endpoints = {
+    "search_movies": "http://wiki_api_service:5000/v1/search/movies"
+}
 
 LOGS_PATH = "../../../logs/"
 
@@ -78,8 +79,13 @@ def _compute_string_similarity(
 
 def _match_with_wiki(movie_title: str) -> dict:
     wiki_results = requests.get(
-        os.getenv("WIKI_MOVIE_CLIENT_ENDPOINT") + movie_title
+        wiki_client_endpoints["search_movies"],
+        params={"title": movie_title},
     )  # One (input title) to-many (output wiki results)
+    # with open(LOGS_PATH+"temp.log", mode="a") as f:
+    #     f.write(f"Wiki results = {wiki_results.json()}\n")
+    with open(LOGS_PATH+"temp.log", mode="a") as f:
+        f.write(f"Wiki results: {wiki_results}\n")
     # Get body of the response
     if wiki_results.status_code == 404:
         return {"url": None}

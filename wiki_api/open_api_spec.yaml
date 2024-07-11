@@ -16,6 +16,11 @@ paths:
       responses:
         200:
           description: The API is working
+      parameters:
+        - in: query
+          title: name
+          schema:
+            type: string
   /home:
     get:
       summary: Get the home page
@@ -36,3 +41,17 @@ paths:
       responses:
         200:
           description: The list of results matching the search query
+  /search/movies:
+    get:
+      summary: Search for a movie
+      description: Search for a movie by title.
+      parameters:
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The list of results matching the search query
+

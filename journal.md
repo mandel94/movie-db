@@ -192,11 +192,16 @@ Ok, that's the end of the CORS presentation. Now that we have fed our paranoid w
 It was indeed a CORS error
 ![cors_error_indeed](./images/cors_error_indeed.png)
 
-After two afternoons of having my spine refilled with alternating currents of "I did it" and "I hate it", I finally didn't made it. I think that Flask hates me, because the problem seemed to unexplicably go away when I removed dynamic routes (i.e. urls with named variables) -- in which case the server applied the permissive CORS policy I'd previously set. Only apparently, however, as the web server still continued to ignore those policies in an haphazard fashion, with the CORS error appearing even without dynamic routes on the wiki API web server. 
+After two afternoons of having my spine refilled with alternating currents of "I did it" and "I hate it", I finally didn't made it. I thought that Flask hated me, because the problem seemed to unexplicably go away when I removed dynamic routes (i.e. urls with named variables) -- in which case the server applied the permissive CORS policy I'd previously set. Only apparently, however, as the web server still continued to ignore those policies in an haphazard fashion, with the CORS error appearing even without dynamic routes on the wiki API web server. 
+
+After a while, I realized that the CORS error might have been the sympton of some deeper flask illness. 
 
 The devil came at last, and it took its toll on me.
 
-I thought I could remove the CORS problem altogether by making requests from the same development environment of my wiki API client. 
+At the end of all of it -- two days of scratching my head until it caught fire --  it happened to be an "URL not found error" when calling the `/v1/search/pages` with query string attached. In contrast, when calling the `/v1/search/movies` endpoint everything worked as smooth as Michael Jackson. My final guess is that Flask couldn't route the request to the proper url when calling the pages endpoint, resulting in a response uncompliant with the CORS security model.  
+ 
+
+
 
 
 📚 Some useful API resources:

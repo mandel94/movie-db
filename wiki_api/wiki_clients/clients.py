@@ -60,9 +60,25 @@ class WikiClient:
             params=parameters,
             verify=False,
         )
+
+        # This works
+        # language_code = 'en'
+        # search_query = 'solar system'
+        # number_of_results = 1
+        # headers = self.headers
+        # base_url = 'https://api.wikimedia.org/core/v1/wikipedia/'
+        # endpoint = '/search/page'
+        # url = base_url + language_code + endpoint
+        # parameters = {'q': search_query, 'limit': number_of_results}
+        # response = requests.get(url, headers=headers, params=parameters, verify=False)
+
+        with open(LOGS_PATH, mode="a") as f:
+            f.write("Time: " + str(datetime.datetime.now()) + "\n")
+            f.write(f"Response is {response.json()}\n")
         if response.status_code != 200:
             raise WikiSearchPageError(search_query)
         return {"how_many": len(response.json()["pages"]), **response.json()}
+        
 
 
 class MovieWikiClient(WikiClient):
