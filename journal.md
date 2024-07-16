@@ -153,7 +153,7 @@ I have to say, the Wiki Client is pampering me with gratifications, and everythi
 
 When building an API, it's important to remember that we are building a product. The product has users, and those users might want to know how to use it. 
 
-Having no instructions puts the API user is an worse position than an IKEA do-it-yourself drawer assembler who lost the user manual: The latter can do its best to find a solution anyway, the former doesn't even know from where to start. 
+Having no instructions puts the API user is an worse position than an IKEA do-it-yourself drawer assembler who lost the user manual: The latter can do its best to find a solution anyway, the former doesn't even know where to start from. 
 
 The [OpenAPI Specification (OAS)](https://swagger.io/specification/) is a standardized form to produce such an instruction manual. Using a standard format is great in many ways:
 * it doesn't depend on any specific programming language;
@@ -233,7 +233,151 @@ I forced myself to use a relational database. Not because I thaught if was a bet
 
 The following is a an ERM schema of my movie model, with a big WORKING IN PROGRESS sign stating that everything could change, anytime.
 
-If you ever saw Inside Out 2 -- if not, I advise you to do it with lots of handkerchiefs close to you -- you know that anxiety is the master-head of planning. As the master-of-anxiety that I am, I could not keep my self from finding a way to ease things up if I ever had to change the design of my model. 
+I was lost on research, so I asked the Great Wizard of Oz, modern version, aka chatGPT, what a movie domain expert would
+have considered when populating a movie db. I stared at the monitor with the typical expression of a golden fish on choloroform, as 
+the AI was pouring business wisdom at me, and realized that some things need not be done by a human, we like it or not.
+I received a comprehensive schema of the movie db, with table relationships resolved 
+according to their [cardinality](https://www.coursera.org/articles/cardinality) --  *Hail to the Great Wisdom of Oz*
+
+
+| Field Name                | Data Type       | Description                                                                              |
+|---------------------------|-----------------|------------------------------------------------------------------------------------------|
+| `movie_id`                | INT (Primary Key, Auto Increment) | Unique identifier for each movie.                                     |
+| `title`                   | VARCHAR(255)    | The official title of the movie.                                                          |
+| `original_title`          | VARCHAR(255)    | The original title of the movie if different from the official title.                     |
+| `tagline`                 | VARCHAR(255)    | The movie's tagline.                                                                      |
+| `plot`                    | TEXT            | A brief summary of the movie's plot.                                                      |
+| `genre`                   | VARCHAR(255)    | The genre(s) of the movie (e.g., Action, Comedy, Drama).                                  |
+| `language`                | VARCHAR(50)     | The primary language of the movie.                                                        |
+| `country`                 | VARCHAR(50)     | The country where the movie was produced.                                                 |
+| `release_date`            | DATE            | The official release date of the movie.                                                   |
+| `runtime`                 | INT             | The runtime of the movie in minutes.                                                      |
+| `budget`                  | DECIMAL(15, 2)  | The production budget of the movie.                                                       |
+| `box_office`              | DECIMAL(15, 2)  | The total box office earnings.                                                            |
+| `rating`                  | DECIMAL(3, 1)   | The average rating of the movie (e.g., from IMDb or Rotten Tomatoes).                      |
+| `rating_count`            | INT             | The number of ratings the movie has received.                                             |
+| `director_id`             | INT             | Foreign key referencing the Directors table.                                              |
+| `writer_id`               | INT             | Foreign key referencing the Writers table.                                                |
+| `studio_id`               | INT             | Foreign key referencing the Studios table.                                                |
+| `distributor_id`          | INT             | Foreign key referencing the Distributors table.                                           |
+| `poster_url`              | VARCHAR(255)    | URL to the movie's poster image.                                                          |
+| `trailer_url`             | VARCHAR(255)    | URL to the movie's trailer.                                                               |
+| `age_rating`              | VARCHAR(10)     | The movie's age rating (e.g., PG, R).                                                     |
+| `imdb_id`                 | VARCHAR(50)     | The IMDb ID for the movie.                                                                |
+| `tmdb_id`                 | VARCHAR(50)     | The TMDB ID for the movie.                                                                |
+| `homepage`                | VARCHAR(255)    | The official homepage for the movie.                                                      |
+| `created_at`              | TIMESTAMP       | Timestamp when the record was created.                                                    |
+| `updated_at`              | TIMESTAMP       | Timestamp when the record was last updated.                                               |
+
+### Table: Directors
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `director_id` | INT (Primary Key, Auto Increment) | Unique identifier for each director.  |
+| `name`        | VARCHAR(255)    | The name of the director.               |
+| `dob`         | DATE            | Date of birth of the director.          |
+| `bio`         | TEXT            | Biography of the director.              |
+| `nationality` | VARCHAR(50)     | Nationality of the director.            |
+| `created_at`  | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at`  | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Writers
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `writer_id`   | INT (Primary Key, Auto Increment) | Unique identifier for each writer.    |
+| `name`        | VARCHAR(255)    | The name of the writer.                 |
+| `dob`         | DATE            | Date of birth of the writer.            |
+| `bio`         | TEXT            | Biography of the writer.                |
+| `nationality` | VARCHAR(50)     | Nationality of the writer.              |
+| `created_at`  | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at`  | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Studios
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `studio_id`  | INT (Primary Key, Auto Increment) | Unique identifier for each studio.    |
+| `name`       | VARCHAR(255)    | The name of the studio.                 |
+| `location`   | VARCHAR(255)    | The location of the studio.             |
+| `founded`    | DATE            | The date the studio was founded.        |
+| `created_at` | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at` | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Distributors
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `distributor_id` | INT (Primary Key, Auto Increment) | Unique identifier for each distributor.|
+| `name`           | VARCHAR(255)    | The name of the distributor.           |
+| `location`       | VARCHAR(255)    | The location of the distributor.       |
+| `created_at`     | TIMESTAMP       | Timestamp when the record was created. |
+| `updated_at`     | TIMESTAMP       | Timestamp when the record was last updated.|
+
+### Table: Cast
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `cast_id`     | INT (Primary Key, Auto Increment) | Unique identifier for each cast member. |
+| `movie_id`    | INT             | Foreign key referencing the Movies table.|
+| `actor_id`    | INT             | Foreign key referencing the Actors table.|
+| `role`        | VARCHAR(255)    | The role played by the actor.            |
+| `billing_order` | INT           | The order of billing for the actor.      |
+| `created_at`  | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at`  | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Actors
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `actor_id`   | INT (Primary Key, Auto Increment) | Unique identifier for each actor.     |
+| `name`       | VARCHAR(255)    | The name of the actor.                  |
+| `dob`        | DATE            | Date of birth of the actor.             |
+| `bio`        | TEXT            | Biography of the actor.                 |
+| `nationality`| VARCHAR(50)     | Nationality of the actor.               |
+| `created_at` | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at` | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Ratings
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `rating_id`   | INT (Primary Key, Auto Increment) | Unique identifier for each rating.    |
+| `movie_id`    | INT             | Foreign key referencing the Movies table.|
+| `source`      | VARCHAR(255)    | The source of the rating (e.g., IMDb, Rotten Tomatoes). |
+| `score`       | DECIMAL(3, 1)   | The rating score.                       |
+| `created_at`  | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at`  | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Genres
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `genre_id`   | INT (Primary Key, Auto Increment) | Unique identifier for each genre.     |
+| `name`       | VARCHAR(255)    | The name of the genre.                  |
+| `created_at` | TIMESTAMP       | Timestamp when the record was created.  |
+| `updated_at` | TIMESTAMP       | Timestamp when the record was last updated. |
+
+### Table: Movie_Genres
+
+| Field Name  | Data Type       | Description                             |
+|-------------|-----------------|-----------------------------------------|
+| `movie_id`  | INT             | Foreign key referencing the Movies table.|
+| `genre_id`  | INT             | Foreign key referencing the Genres table.|
+
+This setup allows for a normalized database design, where related entities like directors, writers, studios, and actors are stored in their respective tables, enabling efficient querying and management of data. The use of foreign keys ensures referential integrity between tables.
+
+*Oz: Could you convert this to sqlalchemy?* 
+I spare you the details, but you can now understand how unexpectedly easy it's been to create not ony my first migration 
+script, but THE WHOLE DESIGN OF MOVIE DB!  
+
+
+<!-- If you ever saw Inside Out 2 -- if not, I advise you to do it with lots of handkerchiefs close to you -- you know that anxiety is the master-head of planning. As the master-of-anxiety that I am, I could not keep my self from finding a way to ease things up if I ever had to change the design of my model.  -->
+
+
+**Useful resources** 📚:
+* [How to manage DB migrations](https://nikhilakki.in/what-is-alembic)
+ 
 
 #### Stating a Source of truth for the schema
 The idea was to create a unique source of truth about the database schema. Not only this source of truth needed to be unique for all services speaking to my movie database, but it had to be understandable by all of them, no matter which programming logic those different services implemented.
@@ -251,12 +395,224 @@ the database engine. If your bubbling your head up and down, this means to follo
   interdimensional-portals / any other asimovian sci-fi metaphor connecting to the db -- talk to the db in pythonic language.
 
 This is mind-warpely called **Object-relational mapping**, and we can do it with [SQLAlchemy](https://www.sqlalchemy.org/) -- a *don't-asky-why-it-works* magical package that allows you to easily speak SQL in python.
-database operations,   
+
+The [movie_db_client](#movie-db-client) carries the weight of talking to the postgres database. As such a duty-bearer, it implements the movie db data model in python. It surely needs to know if some change has occurred in the schema of the movie database:
+* A new table was born;
+* Some was dropped;
+* Some columns has been changed type;
+* Etc.
+
+In one word: Schema. The movie_db_client should have visibility on the schema of the database. Always. 
+One way to do this is to incorporate the schema directly on the db client package -- in native SQLAlchemy, so to say. In this case, I can manually tweak the client code to implement the changes in the db schema. 
+Stil, there is a problem with this solution. What if other packages need to know about the schema? The change in the client db would not reflect on those packages, breaking our devs heart in pieces together with their code. 
+<!-- Is there such a dependent package? Of course, the [Crawling module](#the-crawling-module). This module scrapes the very data that will feed the database, so if surely need to have access to the db schema, else it won't know how to build the Scrapy items out of web resources.  -->
+
+<!-- For example, if I decided to add a producer's table to the database, I would change the schema. This would reflect on the movie database through the movie client, that deals with implementing the data model and has always-on visibility on the schema (because the schema is incorporated directly in the client's code). Still, the crawling module would ignore this change, and ignore the need to search for producers information. This is not a problem in itself, because it only means that the newly created producers' table will stay empty, untill I finally add a new crawling sub-module that specifically deals with scraping information about movie producers. The code won't break. But imagine now if the instead of adding a new table I added a new producer column in the movie table, and some business stakeholder required me to make this feature required. This change in the schema means that the database won't accept news movies without producer column.  -->
+ 
+
+
+How to get always-on visibility on the schema? 
+
+### Implementing the database design
+Once I defined the basic design of the database, I didn't know at first how to 
+implement that design. I had two alternative options:
+* writing a model.py script within the movie_db_client;
+* create a seprate service to perform such structural db operations as table creations, updates, and in general to perform data migrations. 
+
+I read [this](https://stackoverflow.com/questions/30425214/what-is-the-difference-between-creating-db-tables-using-alembic-and-defining-mod), figured it out, and chose for option two -- and had experienced that cosy feeling when you find
+the exact stackoverflow comment you needed, on the spot.
+
+Following the stackwoverflow posts, the steps are:
+1. Write the model classes;
+2. Generate a migration file that peeks into my model and generate the necessary database code.
+
+Alemebic matches what it sees in the model classes with the current schema of the database, automatically bridging any gap, and making sure those schema are reflected in the database, which is thus upgraded to a newer version.  
+
+The same goes for downgrades: If you want to sync your db back to an older version, Alembic gives you a way to automate that process with simple migration scripts. 
+
+The only caveaut is that even the Alembic auto-magic sometimes goes *AzKhazan*, so a manual check add pains but is surely for the best.  
+
+I initialized the Alemebic project as a sub-folder of the `data_model` folder inside the movie_db_client module. 
+After changing the `.ini` file to ensure connectivity to the movie database, I
+created a migration script to build a first version of the db, by adding a revision:
+```
+>>> alembic revision -m "create db tables"
+```
+
+Here's the new migration script. Upgrades reflect the movie db model that was 
+courtesy of chatGPT (see [how I invoked AI-man to design my database](#the-db-schema)).
+
+
+```python
+"""create db tables
+
+Revision ID: a3eaf7723ce5
+Revises: 
+Create Date: 2024-07-16 15:28:26.478149
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = 'a3eaf7723ce5'
+down_revision: Union[str, None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    op.create_table(
+            'directors',
+            sa.Column('director_id', sa.Integer, primary_key=True, autoincrement=True),
+            sa.Column('name', sa.String(255), nullable=False),
+            sa.Column('dob', sa.Date, nullable=True),
+            sa.Column('bio', sa.Text, nullable=True),
+            sa.Column('nationality', sa.String(50), nullable=True),
+            sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+            sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+        )
+
+    # Create Writers table
+    op.create_table(
+        'writers',
+        sa.Column('writer_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('dob', sa.Date, nullable=True),
+        sa.Column('bio', sa.Text, nullable=True),
+        sa.Column('nationality', sa.String(50), nullable=True),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Studios table
+    op.create_table(
+        'studios',
+        sa.Column('studio_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('location', sa.String(255), nullable=True),
+        sa.Column('founded', sa.Date, nullable=True),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Distributors table
+    op.create_table(
+        'distributors',
+        sa.Column('distributor_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('location', sa.String(255), nullable=True),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Actors table
+    op.create_table(
+        'actors',
+        sa.Column('actor_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('dob', sa.Date, nullable=True),
+        sa.Column('bio', sa.Text, nullable=True),
+        sa.Column('nationality', sa.String(50), nullable=True),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Genres table
+    op.create_table(
+        'genres',
+        sa.Column('genre_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('name', sa.String(255), nullable=False),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Movies table
+    op.create_table(
+        'movies',
+        sa.Column('movie_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('title', sa.String(255), nullable=False),
+        sa.Column('original_title', sa.String(255), nullable=True),
+        sa.Column('tagline', sa.String(255), nullable=True),
+        sa.Column('plot', sa.Text, nullable=True),
+        sa.Column('language', sa.String(50), nullable=True),
+        sa.Column('country', sa.String(50), nullable=True),
+        sa.Column('release_date', sa.Date, nullable=True),
+        sa.Column('runtime', sa.Integer, nullable=True),
+        sa.Column('budget', sa.Numeric(15, 2), nullable=True),
+        sa.Column('box_office', sa.Numeric(15, 2), nullable=True),
+        sa.Column('rating', sa.Numeric(3, 1), nullable=True),
+        sa.Column('rating_count', sa.Integer, nullable=True),
+        sa.Column('director_id', sa.Integer, sa.ForeignKey('directors.director_id'), nullable=True),
+        sa.Column('writer_id', sa.Integer, sa.ForeignKey('writers.writer_id'), nullable=True),
+        sa.Column('studio_id', sa.Integer, sa.ForeignKey('studios.studio_id'), nullable=True),
+        sa.Column('distributor_id', sa.Integer, sa.ForeignKey('distributors.distributor_id'), nullable=True),
+        sa.Column('poster_url', sa.String(255), nullable=True),
+        sa.Column('trailer_url', sa.String(255), nullable=True),
+        sa.Column('age_rating', sa.String(10), nullable=True),
+        sa.Column('imdb_id', sa.String(50), nullable=True),
+        sa.Column('tmdb_id', sa.String(50), nullable=True),
+        sa.Column('homepage', sa.String(255), nullable=True),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Ratings table
+    op.create_table(
+        'ratings',
+        sa.Column('rating_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('movie_id', sa.Integer, sa.ForeignKey('movies.movie_id'), nullable=False),
+        sa.Column('source', sa.String(255), nullable=False),
+        sa.Column('score', sa.Numeric(3, 1), nullable=False),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Cast table
+    op.create_table(
+        'cast',
+        sa.Column('cast_id', sa.Integer, primary_key=True, autoincrement=True),
+        sa.Column('movie_id', sa.Integer, sa.ForeignKey('movies.movie_id'), nullable=False),
+        sa.Column('actor_id', sa.Integer, sa.ForeignKey('actors.actor_id'), nullable=False),
+        sa.Column('role', sa.String(255), nullable=False),
+        sa.Column('billing_order', sa.Integer, nullable=True),
+        sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.TIMESTAMP, server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False)
+    )
+
+    # Create Movie_Genres table
+    op.create_table(
+        'movie_genres',
+        sa.Column('movie_id', sa.Integer, sa.ForeignKey('movies.movie_id'), primary_key=True),
+        sa.Column('genre_id', sa.Integer, sa.ForeignKey('genres.genre_id'), primary_key=True)
+    )
+
+
+def downgrade() -> None:
+    pass
+```
+
+
+<!-- Helpful resource: https://stackoverflow.com/questions/30425214/what-is-the-difference-between-creating-db-tables-using-alembic-and-defining-mod  -->
+
+I opted for options two, and built a separate service in Alembic. 
+What is Alembic? 
+
+I used [Alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html) for managing data migrations.  
+
+
+
+#### Connect the crawling module to the movie db client
+
+
 
 ### Overview of the Services
 
 #### Initialize the database
-Service name: `init_movie_db`
+Service name: `movie_db`
 What does it do?
 * uses the [official postgres image](https://hub.docker.com/_/postgres) to initialize the movie_db database if it doesn't exist yet
 

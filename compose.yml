@@ -26,14 +26,24 @@ services:
     container_name: movie_db
     restart: always
     shm_size: 128mb
+    volumes:
+      - movie_db:/var/lib/postgresql/data
+    command: postgres >logfile 2>&1 &
     environment:
+      POSTGRES_DB: movie_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456789
-    volumes:
-      - ./db:/var/lib/postgresql/data
-    command: postgres >logfile 2>&1 &
     ports:
       - "5432:5432"
+  test_db:  
+    image: postgres
+    container_name: test_db
+    environment:
+      POSTGRES_DB: movie_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456789
+    ports:
+      - "5433:5432"
   swagger_ui:
     image: swaggerapi/swagger-ui
     container_name: swagger_ui
@@ -55,7 +65,7 @@ networks:
     driver: bridge
 
 volumes:
-  db:
+  movie_db:
     driver: local
   movie_data:
     driver: local
