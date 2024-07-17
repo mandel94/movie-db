@@ -435,7 +435,65 @@ The same goes for downgrades: If you want to sync your db back to an older versi
 The only caveaut is that even the Alembic auto-magic sometimes goes *AzKhazan*, so a manual check add pains but is surely for the best.  
 
 I initialized the Alemebic project as a sub-folder of the `data_model` folder inside the movie_db_client module. 
-I first changed the `.ini` file to ensure connectivity to the movie database, adding the address that points to the postgresql engine:
+
+I first changed the `.ini` file to ensure connectivity to the movie database, adding the address that points to the postgresql engine.
+This came with a firts challenge: How to setup alembic configurations when I have multiple databases. I had to add multiple configuration headers in the `.ini` file, in place of the [alembic] section: 
+
+```ini
+[movie_db]
+script_location = alembic
+prepend_sys_path = .
+version_path_separator = os  
+sqlalchemy.url = postgresql://postgres:123456789@localhost:5432/movie_db
+
+
+[test_db]
+script_location = alembic
+prepend_sys_path = .
+version_path_separator = os  
+sqlalchemy.url = postgresql://postgres:123456789@localhost:5433/test_db
+```
+
+After that, I modified the `env.py` file, inspired by [this article](https://learningtotest.com/2021/06/17/managing-alembic-migrations-with-a-single-alembic-ini-env-py/). The function definition for online migration is:
+
+
+```py
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    # https://learningtotest.com/2021/06/17/managing-alembic-migrations-with-a-single-alembic-ini-env-py/
+    
+    section = config.get_section(config.config_ini_section)
+    # # Inject environment variable values into connection string
+    url = section["sqlalchemy.url"]
+
+    section["sqlalchemy.url"] = url
+    connectable = engine_from_config(
+        section,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+```
+
 
 I initialized a migration script template to build a first version of the db -- my first revision:
 ```
@@ -597,11 +655,15 @@ def downgrade() -> None:
     pass
 ```
 
-I finally run the db migration:
+I finally run the db migration for both the movie db and the test db:
 
-```>>> alembic upgrade head```
+```>>> alembic --name movie_db upgrade head```
+```>>> alembic --name test_db upgrade head```
+
 
 Where `head` points to the file of the last migration.
+
+Wishful thinking: It would be great to automate those two commands above with docker, so that each time the db client container is run all the last found migrations (referenced by `head`) are automatically executed. 
 
 I have to say, the coding experience sometimes can be the pros of swearing-milker, 
 but when code works as expected it's like rolling down a fluffy hill: you can feel 
@@ -692,6 +754,14 @@ Everything went Oll Korrect ✅
 │              │ movies_distributor_id_fkey                          │
 ╘══════════════╧═════════════════════════════════════════════════════╛
 ```
+
+#### Test the repository
+
+<!-- Some tests on the database:  -->
+
+*Useful resources*: 
+* [A guide to database unit testing](https://coderpad.io/blog/development/a-guide-to-database-unit-testing-with-pytest-and-sqlalchemy/)
+
 
 
 #### Connect the crawling module to the movie db client
