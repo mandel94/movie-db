@@ -20,6 +20,8 @@ services:
     networks:
       - crawling_network
     depends_on:
+      - movie_db
+      - test_db
       - wiki_api_service
   movie_db:
     image: postgres

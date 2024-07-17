@@ -375,6 +375,8 @@ script, but THE WHOLE DESIGN OF MOVIE DB!
 <!-- If you ever saw Inside Out 2 -- if not, I advise you to do it with lots of handkerchiefs close to you -- you know that anxiety is the master-head of planning. As the master-of-anxiety that I am, I could not keep my self from finding a way to ease things up if I ever had to change the design of my model.  -->
 
 
+
+
 **Useful resources** 📚:
 * [How to manage DB migrations](https://nikhilakki.in/what-is-alembic)
  
@@ -433,14 +435,14 @@ The same goes for downgrades: If you want to sync your db back to an older versi
 The only caveaut is that even the Alembic auto-magic sometimes goes *AzKhazan*, so a manual check add pains but is surely for the best.  
 
 I initialized the Alemebic project as a sub-folder of the `data_model` folder inside the movie_db_client module. 
-After changing the `.ini` file to ensure connectivity to the movie database, I
-created a migration script to build a first version of the db, by adding a revision:
+I first changed the `.ini` file to ensure connectivity to the movie database, adding the address that points to the postgresql engine:
+
+I initialized a migration script template to build a first version of the db -- my first revision:
 ```
 >>> alembic revision -m "create db tables"
 ```
 
-Here's the new migration script. Upgrades reflect the movie db model that was 
-courtesy of chatGPT (see [how I invoked AI-man to design my database](#the-db-schema)).
+I then populated the migration script's upgrade function ([see here the final migration script](#the-db-schema)). The code material was courtesy of chatGPT (see [how I invoked AI-man to design my database](#the-db-schema))
 
 
 ```python
@@ -595,14 +597,101 @@ def downgrade() -> None:
     pass
 ```
 
+I finally run the db migration:
+
+```>>> alembic upgrade head```
+
+Where `head` points to the file of the last migration.
+
+I have to say, the coding experience sometimes can be the pros of swearing-milker, 
+but when code works as expected it's like rolling down a fluffy hill: you can feel 
+the nice warmth of a coding day that ended like it *had* to end, and you can go 
+doing some sports with a smile on your face. The evening where I successfully did
+my first data migration, I had one hour of non-stop cycling, feeling like a happy kid from a 
+Stephen King's book having a light-hearted ride -- hoping to stay free from nightmares to come.  
+
 
 <!-- Helpful resource: https://stackoverflow.com/questions/30425214/what-is-the-difference-between-creating-db-tables-using-alembic-and-defining-mod  -->
 
-I opted for options two, and built a separate service in Alembic. 
-What is Alembic? 
 
-I used [Alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html) for managing data migrations.  
+#### Load tables in SQLAlchemy
+The db had finally born with al its tables. Still, it was empty as the Black Rock Desert. We had to transform those dunes into
+the Hollywood Hills, a place brimming with lively directors, ingenious writers, canny producers, and all the other folks of the good old Seventh Art. To do that, we needed SQLAlchemy -- *talk pythonic to db*, remember? 
+So I created a data model in SQLAlchemy [autoloading the tables](https://docs.sqlalchemy.org/en/20/core/reflection.html) I previously created with Alembic (by the way, SQLAlchemy and Alembic have a relationship
+of the *bread-and-butterly* sort). The secret to tables autoloading is a concept called **reflection**, that is just a word to
+say *look in the database, and make python classes out of what you see there*. All that information (primay keys, foreing keys, etc..) is put inside the Metadata, a sort of infobox with everything needed to create the Tables objects in python.  
 
+When creating a table, SQLAlchemy automatically generates new tables out of foreign keys, if there is any. 
+
+This is the code to generate the data model (the set of `Tables` objects we'll use to interact with the movie db)
+
+```py
+
+from sqlalchemy import MetaData, Table
+from repository.engine import engine
+
+# Initialize metadata
+metadata_obj = MetaData()
+
+# Reflect all table at once in the metadata ("See what's in the provided engine")
+metadata_obj.reflect(bind=engine)
+
+# Extract all the table names from the metadata
+table_names = metadata_obj.tables.keys()
+
+# Create a dictionary with all the `Table` objects to interact with the database
+tables = {table_name: Table(table_name, metadata_obj, autoload_with=engine) for table_name in table_names}
+
+```
+
+I created a `get_table_info` function to print out some pretty table information. 
+Everything went Oll Korrect ✅
+
+```
+╒══════════════╤═════════════════════════════════════════════════════╕
+│ Table        │ movies                                              │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Columns      │ NAME            TYPE            NULLABLE    DEFAULT │
+│              │ movie_id        INTEGER         False               │
+│              │ title           VARCHAR(255)    False               │
+│              │ original_title  VARCHAR(255)    True                │
+│              │ tagline         VARCHAR(255)    True                │
+│              │ plot            TEXT            True                │
+│              │ language        VARCHAR(50)     True                │
+│              │ country         VARCHAR(50)     True                │
+│              │ release_date    DATE            True                │
+│              │ runtime         INTEGER         True                │
+│              │ budget          NUMERIC(15, 2)  True                │
+│              │ box_office      NUMERIC(15, 2)  True                │
+│              │ rating          NUMERIC(3, 1)   True                │
+│              │ rating_count    INTEGER         True                │
+│              │ director_id     INTEGER         True                │
+│              │ writer_id       INTEGER         True                │
+│              │ studio_id       INTEGER         True                │
+│              │ distributor_id  INTEGER         True                │
+│              │ poster_url      VARCHAR(255)    True                │
+│              │ trailer_url     VARCHAR(255)    True                │
+│              │ age_rating      VARCHAR(10)     True                │
+│              │ imdb_id         VARCHAR(50)     True                │
+│              │ tmdb_id         VARCHAR(50)     True                │
+│              │ homepage        VARCHAR(255)    True                │
+│              │ created_at      TIMESTAMP       False               │
+│              │ updated_at      TIMESTAMP       False               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Primary Key  │ movie_id                                            │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Foreign Keys │ distributors.distributor_id                         │
+│              │ studios.studio_id                                   │
+│              │ writers.writer_id                                   │
+│              │ directors.director_id                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Constraints  │ movies_director_id_fkey                             │
+│              │ movies_writer_id_fkey                               │
+│              │ movies_pkey                                         │
+│              │ movies_studio_id_fkey                               │
+│              │ movies_distributor_id_fkey                          │
+╘══════════════╧═════════════════════════════════════════════════════╛
+```
 
 
 #### Connect the crawling module to the movie db client
@@ -667,9 +756,9 @@ Here is a list of volumes I created for the movie_db suite:
 * `movie_db_movie_logs`: This volume persist all the logs produced by the application. This is a one-shop for logs, useful for debugging, and in general for orderly keeping track of the coding process. This volume contains a `movie_list.jsonl` file, with all the movies to be scraped, plus  
 * `postgres_data`: This volumes stores the da ta in a [PostgreSQL](https://www.postgresql.org/) database. 
 
-### Combining the services
+<!-- ### Combining the services -->
 
-The docker `compose.yml` file to run our multi-container application is the following:
+<!-- The docker `compose.yml` file to run our multi-container application is the following:
 ```yml
 name: movie_db
 
@@ -719,7 +808,7 @@ volumes:
   logs:
     driver: local
 
-```
+``` -->
 
 
 
