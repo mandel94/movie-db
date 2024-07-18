@@ -20,7 +20,7 @@ The idea is to create a `compose.yml` file to create an orchestrated suite of pr
 
 ## Architecture
 
-I am implementing a micro-services architecture, mainly because:
+I implemented a micro-services architecture, mainly because:
 - From what I heard, delevoping new skills relating to microservices and service orchestration is paramount;
 - Undoubtedly, it seems to me that combining services that are developed in complete isolation has clear advantages that overcome any of the sweating -- and swearing -- of going up the learning path -- the walls of my room must have heard a swearing or two, I apologetically have to admit.
 
@@ -39,6 +39,7 @@ I decide that the url for Max is a good starting point.
 So the first challenge is:
 
 > Create a spider that takes that takes the an url as input that has a gallery of movies inside. That gallery is converted into a json-formatted string. That json-formatted string is mocking a user who is explicitly telling the suite of programs what movie to scrape information for.
+> After getting the list of movie, I'll make a call to the another spider, who'll read the list and create the actual entities to populate the database, following all relevant urls for getting the information needed. 
 
 
 ## The Contract
@@ -766,6 +767,13 @@ Everything went Oll Korrect ✅
 
 #### Connect the crawling module to the movie db client
 
+Connection between the crawling module and the movie db client happened through the creation of a shared docker volume, through which containers got access the same piece of data, an `item-list.json` file. That file was written by the crawling service as an output of its scraping, and consumed by the client service as an input for populating the database; 
+
+
+2. A precise chronological orchestration of containers. I did this by setting the `compose.yml` file so that the movie db client service depended on the crawling service having initialized. This way the client had visibility on the last freshly scraped version of the item list, and could process it in bulk to populate the database. 
+
+This whole process in synchronous, defusing some of the advantages of docker -- that is, indipendent containers that can operate in autonomy through asynchronous communication. I opted for this choice for the following reasons:
+1. This whole process has a lower network latency, as the d 
 
 
 ### Overview of the Services
@@ -806,7 +814,9 @@ The Dockerfile's ENTRYPOINT is the `run_spiders.py` script, which runs tall the 
 P.S. For the sake of honesty, I humbly tried to implement this orchestration using `scrapy.crawler.CrawlerRunner` object, but humbly failed in front of such a soul-devastating event like *a freaking bug that I cannot freaking understand!* 
 It was sad, as I understood that [running spiders from a CrawlerRunner](https://stackoverflow.com/questions/39706005/crawlerprocess-vs-crawlerrunner) gives you more flexibility in terms of [thread-safety](https://en.wikipedia.org/wiki/Thread_safety).
  
-
+Spiders are communicating through a shared docker volume containing the list of movies. This list is created by the movie-list spider
+and consumed by the movie spider to create the items. Items are than converted into a standardized json object, which can be easily 
+imported by the movie db client as a python dictionary to insert the each item in the database -- after checking that the item has not been previously uploaded to the db. 
 
 
 ## Microservices architecture

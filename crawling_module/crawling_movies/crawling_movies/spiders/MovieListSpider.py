@@ -5,14 +5,12 @@ from crawling_movies.items import MovieList
 from urllib.parse import urlparse, urlunparse
 from crawling_movies.loaders import MovieListLoader
 import requests
-import os
 import uuid
 from thefuzz import fuzz
 from typing import Literal
 from utils import spider_logs_file, write_on_file
 import requests
 
-# wiki_base_url = "https://en.wikipedia.org/wiki/"
 jw_movie_list_base_url = "https://www.justwatch.com/us/provider/max/movies?page="
 _jw_base_url = "https://www.justwatch.com/"
 _jw_movies_base_url = _jw_base_url + "movies/"
@@ -29,23 +27,6 @@ def remove_special_characters(string: str):
     string = re.sub(r"[^a-zA-Z0-9]+", " ", string)
     return string
 
-
-def _normalize_for_jw_url(string: str):
-    """Normalization routine for JustWatch URLs"""
-    # Replace spaces with hyphens
-    string = re.sub(r"\s+", "-", string)
-    # Remove leading and trailing hyphens
-    string = re.sub(r"^-+|-+$", "", string)
-    # Remove double hyphens
-    string = re.sub(r"--+", "-", string)
-    # Convert to lowercase
-    string = string.lower()
-    return string
-
-
-def _get_justwatch_href(movie_string: str):
-    movie_url = _jw_movies_base_url + _normalize_for_jw_url(movie_string)
-    return movie_url
 
 
 def _best_fuzzy_match(movie_title: str, wiki_results: dict) -> dict:

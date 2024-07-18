@@ -13,7 +13,6 @@ class MovieSpider(scrapy.Spider):
 
     def __init__(self):
         pass
-
     
     # Make a request for each movie
     def start_requests(self):

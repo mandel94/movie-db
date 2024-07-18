@@ -5,7 +5,8 @@ from scrapy.utils.project import get_project_settings
 
 def run_spiders():
     process = CrawlerProcess(get_project_settings())
-    process.crawl("get_movie_list_from_justwatch")
+    process.crawl("get_movie_list_from_justwatch") 
+    process.crawl("scrape_movies")
     process.start()
 
 
