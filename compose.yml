@@ -11,18 +11,27 @@ services:
     networks:
       - crawling_network
       - open_api_network
+    depends_on:
+      - message_broker
   crawling_service:
     build: ./crawling_module
     volumes:
       - movie_data:/movie_data
       - logs:/logs
       - ./crawling_module:/app
+      - settings:/settings
+
     networks:
       - crawling_network
     depends_on:
-      - movie_db
-      - test_db
-      - wiki_api_service
+      movie_db:
+        condition: service_started
+      message_broker: 
+        condition: service_healthy
+      test_db:
+        condition: service_started
+      wiki_api_service:
+        condition: service_started
   movie_db:
     image: postgres
     container_name: movie_db
@@ -57,6 +66,30 @@ services:
       - ./wiki_api/open_api_spec.yaml:/app/open_api_spec.yaml
     networks:
       - open_api_network
+  message_broker:
+    build:
+      context: ./message_broker
+    container_name: message_broker
+    restart: always
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI port
+      - "1883:1883"    # MQTT port
+      - "61613:61613"  # STOMP port
+    networks:
+      - crawling_network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+  settings:
+    build: ./settings
+    volumes:
+      - settings:/settings
+    
+
     
     
 
@@ -73,5 +106,8 @@ volumes:
     driver: local
   logs:
     driver: local
-
+  crawling_queue:
+    driver: local
+  settings:
+    driver: local
 

@@ -1,0 +1,8 @@
+{
+    "crawling": {
+        "messaging": {
+            "RABBITMQ_HOST": "message_broker",
+            "RABBITMQ_QUEUE": "items_queue"
+        }
+    }
+}

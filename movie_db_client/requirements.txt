@@ -2,3 +2,4 @@ tabulate
 SQLAlchemy
 pyperclip
 pytest
+pika

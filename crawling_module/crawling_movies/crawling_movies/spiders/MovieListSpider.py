@@ -8,7 +8,6 @@ import requests
 import uuid
 from thefuzz import fuzz
 from typing import Literal
-from utils import spider_logs_file, write_on_file
 import requests
 
 jw_movie_list_base_url = "https://www.justwatch.com/us/provider/max/movies?page="
@@ -72,7 +71,8 @@ def _match_with_wiki(movie_title: str) -> dict:
         return {"url": None}
     # Check if wiki_results has an error key
     if wiki_results.json()["how_many"] == 0:
-        write_on_file(spider_logs_file, f"No match found for {movie_title}\n")
+        with open(LOGS_PATH+"temp.log", mode="a") as f:
+            f.write(f"No match found for {movie_title}\n")
         return {"url": None}
     return _best_fuzzy_match(movie_title, wiki_results.json())
 
@@ -89,6 +89,7 @@ class JustWatchMovieListSpider(scrapy.Spider):
     custom_settings = {
         "ITEM_PIPELINES": {
             "crawling_movies.pipelines.MovieListPipeline": 300,
+            "crawling_movies.pipelines.RabbitMQPipeline": 400,
         },
     }
 

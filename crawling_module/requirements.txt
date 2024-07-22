@@ -1,3 +1,4 @@
 Scrapy
 python-dotenv
 thefuzz
+pika

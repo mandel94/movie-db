@@ -769,11 +769,47 @@ Everything went Oll Korrect ✅
 
 Connection between the crawling module and the movie db client happened through the creation of a shared docker volume, through which containers got access the same piece of data, an `item-list.json` file. That file was written by the crawling service as an output of its scraping, and consumed by the client service as an input for populating the database; 
 
+At first, I thought to set up container orchestration in such a way that the movie db dependent on the crawling service to scrape the whole item list, and only after that the client service would have processed the file to populate the db, in bulk. But this would have defused some of the advantages of docker -- that is, indipendent containers that can operate in autonomy. Than I thought that the very sharing a volume dispensed me from the need to orchestrate the containers: They could process the same data (aka data in the shared volume) even without talking to each other! Indipendent as America was back in that 4th of July.
 
-2. A precise chronological orchestration of containers. I did this by setting the `compose.yml` file so that the movie db client service depended on the crawling service having initialized. This way the client had visibility on the last freshly scraped version of the item list, and could process it in bulk to populate the database. 
+Only, I would have needed to implement some queueing mechainism, or similar, that would populate with all the items entering the item list. While that queue was not empty, the client service would have done its db operations, while the crawler would feed new items into the barrel of the queue. Everything in parallel. 
 
-This whole process in synchronous, defusing some of the advantages of docker -- that is, indipendent containers that can operate in autonomy through asynchronous communication. I opted for this choice for the following reasons:
-1. This whole process has a lower network latency, as the d 
+So I decided it was the right time to learn some rabbitMQ. 
+Ready for some fairy tales? Into the rabbit hole: rabbitMQ is an open source message broker. A postman of the internet, if you will. [One broker to to queue them all](https://www.rabbitmq.com/), as the lovely sub-title of its website states. Whatever the definition, Rabbit is one of the main solutions when dealing with messaging. It follows the [Advanced Message Queuing Protocol (AMQP)](https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol), which is implemented in python by the [Pika](https://pika.readthedocs.io/en/stable/) library.
+
+I was inspired by the tutorials in [this page](https://www.rabbitmq.com/tutorials), where you can find implementations of the main messaging patterns in different programming languages. I opted for the simplest things of all: A producer published messages to the queue, and those messages are consumed by a single consumer: 
+![rabbitMQ0's simplest pattern](./images/rabbitmq_pattern.png)
+"The simplest thing that does *something*" ([source](https://www.rabbitmq.com/tutorials))*
+
+At its core, a message broker accepts and forwards messages, binary blobs of data carrying information around. Like letters into a letterbox, those messages are delivered inside a sort of post office, the queue. That delivery is made by the *producer*, while the sleepy oldie slowly parading over its well-kept garden to pick the message up is the *consumer*. 
+
+Let's assign the roles:
+* *publisher*: The crawler service, which publishes items to the message queue;
+* *consumer*: The movie db service, which consumes the items from the message queue;
+
+WISHFUL THINKING:
+To make things more modular, in the future I might create a separate message_broker service, encapsulating all concerns relating to the infrastructure of message-based communication. Other services belonging to the same docker network will be able to interact with the broker service to publish/consume domain-specific messages. 
+
+Here is how I set message brokering:
+* messages are transient (stored in-memory). 
+* messages are deleted after aknowledgement by the consumer;
+
+I did not opt for [Rabbit Streams](https://www.rabbitmq.com/docs/streams), because I didn't need long-period storages of the item data nor high throughput capabilities -- the message-producing rate of the crawler was quite low. 
+
+<!-- **First, a primer on queues**: Queues are a python data structure especially useful in threaded programming. -->
+
+I set up a Rabbit node, with blocking connection to the following destination 
+RABBITMQ_HOST ->'message_broker'
+RABBITMQ_QUEUE -> 'scrapy_queue'
+
+Where message_broker is the the name of the rabbitmq's container exposing the rabbit server.
+I implemented a pipeline in the crawling module, `RabbitMQPipeline`, enabling it on the
+custom settings of the `MovieListSpider`, so that each item processed by that spider is sent as a json object on the 'scrapy_queue' queue on a channel of the rabbit server. The following is a screenshot from the management UI, displaying an example of such a message:
+![An example of message sent to the RabbitMQ server](./images/rabbit_message.png)
+
+
+
+ 
+
 
 
 ### Overview of the Services
@@ -808,6 +844,17 @@ This services implements a scraping routine based on [Scrapy](https://scrapy.org
 This service deploys the following spiders:
 * `MovieListSpider`, which spits out the list of movies to be scraped;
 * `MovieSpider`, which starts from the list of movies above and scrapes specific movie data across all the sources;
+
+
+#### Settings
+Service name: `settings`
+What does it do?
+* Contains a /settings folder that's mapped to the setting volume, used to share 
+  cross-container settings.  
+
+This module has all the settings in one place, without the need to duplicate them
+across containers, that is prone to inconsistencies across in containers.
+
 
 
 The Dockerfile's ENTRYPOINT is the `run_spiders.py` script, which runs tall the spiders it finds in the folder of the scrapy project using a `scrapy.crawler.CrawlingProcess`. This python script will serve as a sort of orchestration point of the scraping activity. 
