@@ -3,3 +3,5 @@ SQLAlchemy
 pyperclip
 pytest
 pika
+python-dotenv
+psycopg2==2.9.7

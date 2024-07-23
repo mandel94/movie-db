@@ -9,7 +9,7 @@ url_object = URL.create(
     "postgresql",
     username="postgres",
     password=os.getenv("DB_PASSWORD"),
-    host="localhost",
+    host="movie_db",
     database="movie_db"
     )
 
