@@ -20,7 +20,6 @@ services:
       - logs:/logs
       - ./crawling_module:/app
       - settings:/settings
-
     networks:
       - crawling_network
     depends_on:
@@ -46,6 +45,8 @@ services:
       POSTGRES_PASSWORD: 123456789
     ports:
       - "5432:5432"
+    networks:
+      - movie_db_network
   test_db:  
     image: postgres
     container_name: test_db
@@ -55,6 +56,8 @@ services:
       POSTGRES_PASSWORD: 123456789
     ports:
       - "5433:5432"
+    networks:
+      - movie_db_network
   swagger_ui:
     image: swaggerapi/swagger-ui
     container_name: swagger_ui
@@ -66,6 +69,18 @@ services:
       - ./wiki_api/open_api_spec.yaml:/app/open_api_spec.yaml
     networks:
       - open_api_network
+  movie_db_client:
+    build:
+      context: ./movie_db_client
+    depends_on:
+        - crawling_service
+    volumes:
+      - logs:/logs
+      - settings:/settings 
+      - ./movie_db_client:/app
+    networks:
+        - crawling_network
+        - movie_db_network
   message_broker:
     build:
       context: ./message_broker
@@ -80,12 +95,12 @@ services:
       - crawling_network
     healthcheck:
       test: rabbitmq-diagnostics -q ping
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
       start_period: 5s
   settings:
-    build: ./settings
+    build: ./settings_service
     volumes:
       - settings:/settings
     
@@ -97,6 +112,8 @@ networks:
   crawling_network:
     driver: bridge
   open_api_network:
+    driver: bridge
+  movie_db_network:
     driver: bridge
 
 volumes:

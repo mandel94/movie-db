@@ -339,16 +339,18 @@ according to their [cardinality](https://www.coursera.org/articles/cardinality) 
 | `created_at` | TIMESTAMP       | Timestamp when the record was created.  |
 | `updated_at` | TIMESTAMP       | Timestamp when the record was last updated. |
 
-### Table: Ratings
+### Table: Reviews
 
 | Field Name  | Data Type       | Description                             |
 |-------------|-----------------|-----------------------------------------|
-| `rating_id`   | INT (Primary Key, Auto Increment) | Unique identifier for each rating.    |
+| `review_id`   | INT (Primary Key, Auto Increment) | Unique identifier for each review.    |
 | `movie_id`    | INT             | Foreign key referencing the Movies table.|
 | `source`      | VARCHAR(255)    | The source of the rating (e.g., IMDb, Rotten Tomatoes). |
 | `score`       | DECIMAL(3, 1)   | The rating score.                       |
+| `summary`     | TEXT            | A brief summary of the review.
 | `created_at`  | TIMESTAMP       | Timestamp when the record was created.  |
 | `updated_at`  | TIMESTAMP       | Timestamp when the record was last updated. |
+
 
 ### Table: Genres
 
@@ -806,9 +808,10 @@ I implemented a pipeline in the crawling module, `RabbitMQPipeline`, enabling it
 custom settings of the `MovieListSpider`, so that each item processed by that spider is sent as a json object on the 'scrapy_queue' queue on a channel of the rabbit server. The following is a screenshot from the management UI, displaying an example of such a message:
 ![An example of message sent to the RabbitMQ server](./images/rabbit_message.png)
 
+Address of management UI: http://localhost:15672/
+User: "guest"
+Password: "guest"
 
-
- 
 
 
 
@@ -854,6 +857,13 @@ What does it do?
 
 This module has all the settings in one place, without the need to duplicate them
 across containers, that is prone to inconsistencies across in containers.
+
+
+#### Message broker
+Service name: `message_broker`
+What does it do?
+* It extends the rabbitmq image
+  * It enables basic plugins 
 
 
 
