@@ -29,9 +29,6 @@ class MovieListPipeline:
         self.file.close()
 
 
-# pipelines.py
-import sqlite3
-from twisted.enterprise import adbapi
 
 # myproject/pipelines.py
 class PipePipeline:
@@ -41,7 +38,8 @@ class PipePipeline:
     @classmethod
     def from_crawler(cls, crawler):
         # Get the pipe_end from the spider
-        pipe_end = crawler.crawler.engine.spider.pipe_end
+        spider = crawler.crawler.engine.spider
+        pipe_end = getattr(spider, "pipe_end", None)
         return cls(pipe_end)
 
     def process_item(self, item, spider):
@@ -51,9 +49,7 @@ class PipePipeline:
     def close_spider(self, spider):
         self.pipe_end.send("END")  # Send end signal
         self.pipe_end.close()  # Close the pipe end
-
-
-        
+       
 
 
 
