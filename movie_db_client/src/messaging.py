@@ -10,35 +10,45 @@ def get_settings():
         settings = json.load(f)["crawling"]["messaging"]
     return settings
 
-def callback(ch, method, properties, body):
-    print(f" [x] Received {body}")
 
-
-def connect_to_crawling_queue():
-    settings = get_settings()
-    # Connect to the crawling queue 
-    rabbitmq_host = settings["RABBITMQ_HOST"]
-    rabbitmq_queue = settings["RABBITMQ_QUEUE"]
-
-    connection = pika.BlockingConnection(pika.ConnectionParameters(rabbitmq_host))
-    channel = connection.channel()
-    channel.queue_declare(
-        queue=rabbitmq_queue
-    )  # It's a good practice to repeat declaring the queue in both programs.
-    channel.basic_consume(
-        queue=rabbitmq_queue, on_message_callback=callback, auto_ack=True
-    )
-    print(' [*] Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
-
-
-def run_message_consumers():
+def create_rabbitmq_connection(host, port, username, password):
     try:
-        connect_to_crawling_queue()
-    except KeyboardInterrupt:
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+        credentials = pika.PlainCredentials(username, password)
+        connection_params = pika.ConnectionParameters(
+            host=host, port=port, virtual_host="/", credentials=credentials
+        )
+        connection = pika.BlockingConnection(connection_params)
+        return connection
+    except Exception as e:
+        print(f"Failed to connect to RabbitMQ: {e}")
+        raise
 
 
+
+class RabbitMQAPI:
+    def __init__(self):
+        self.connection = None
+        self.channel = None
+
+    def connect(self, host, port, username, password):
+        self.connection = create_rabbitmq_connection(host, port, username, password)
+
+    def create_channel(self):
+        if not self.connection:
+            raise Exception("Connection not found on object")
+        self.channel = self.connection.channel()
+        return self
+
+    def subscribe_to_queue(self, queue, callback):
+        if not self.channel:
+            print("Channel not found on object")
+            self.create_channel()
+            print("Channel created")
+        self.channel.queue_declare(queue=queue)
+        self.channel.basic_consume(queue=queue, on_message_callback=callback, auto_ack=True)
+        print(f"Subscribed to queue {queue}")
+        print(" [*] Waiting for messages. To exit press CTRL+C")
+        self.channel.start_consuming()
+    
+
+   
