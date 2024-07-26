@@ -1,5 +1,7 @@
 from typing import Any
 import pika
+import logging
+import json
 
 
 LOGS_FOLDER = 'logs/'
@@ -16,11 +18,31 @@ spider_error_logs_file = open(SPIDERS_ERROR_LOGS_FILE, 'w')
 #         f.write(message)
 
 
-def send_message(message: str, queue_name: str) -> None:
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', port=5672))
-    channel = connection.channel()
-    channel.queue_declare(queue=queue_name)
-    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-    connection.close()
-    # write_on_file(spider_logs_file, f"Sent message: {message}\n")
-    print(f"Sent message: {message}\n")
+def _load_settings() -> None:
+    try:
+        with open("../settings/settings.json", mode="r") as f:
+            settings = json.load(f)
+            return settings["crawling"]["messaging"]
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logging.error(f"Failed to load settings: {e}")
+        raise e
+
+
+
+
+def create_rabbitmq_connection(host, port, username, password):
+    settings = _load_settings()
+    try:
+        credentials = pika.PlainCredentials(username, password)
+        connection_params = pika.ConnectionParameters(
+            host=host,
+            port=port,
+            virtual_host='/',
+            credentials=credentials
+        )
+        connection = pika.BlockingConnection(connection_params)
+        return connection
+    except Exception as e:
+        logging.error(f"Failed to connect to RabbitMQ: {e}")
+        raise
+

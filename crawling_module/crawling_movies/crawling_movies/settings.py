@@ -44,9 +44,10 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    "crawling_movies.middlewares.CrawlingMoviesSpiderMiddleware": 543,
-#}
+# SPIDER_MIDDLEWARES = {
+# #    "crawling_movies.middlewares.CrawlingMoviesSpiderMiddleware": 543,
+#      "crawling_movies.middlewares.TooManyRequestsRetryMiddleware": 544,
+# }
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -112,6 +113,14 @@ FEEDS = {
 FEED_EXPORT_ENCODING = "utf-8"
 
 # settings.py
-RABBITMQ_HOST = 'localhost'
-RABBITMQ_QUEUE = 'scrapy_queue'
+# RABBITMQ_HOST = 'localhost'
+# RABBITMQ_QUEUE = 'scrapy_queue'
 
+RETRY_HTTP_CODES = [429]
+
+
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 1  # Initial download delay
+AUTOTHROTTLE_MAX_DELAY = 10  # Maximum download delay to be set in case of high latencies
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0  # Average number of requests Scrapy should be sending in parallel to each remote server
+AUTOTHROTTLE_DEBUG = False  # Show throttling stats for every response received

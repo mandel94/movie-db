@@ -33,11 +33,12 @@ class MovieListSpider(scrapy.Spider):
         "DOWNLOAD_DELAY": 0.4,
         "ITEM_PIPELINES": {
             "crawling_movies.pipelines.MovieListPipeline": 300,
-            # "crawling_movies.pipelines.RabbitMQPipeline": 400,
+            "crawling_movies.pipelines.PipePipeline": 500,
         },
+        "LOG_LEVEL": "ERROR"
     }
 
-    page_limit = 3
+    page_limit = 1
     start_urls = [f"{JW_MOVIE_LIST_BASE_URL}1"]
 
     def __init__(self, pipe_end=None, *args, **kwargs):

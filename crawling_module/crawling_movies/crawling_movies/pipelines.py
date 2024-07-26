@@ -12,22 +12,20 @@ import json
 import pika
 
 
-
 class MovieListPipeline:
 
     def open_spider(self, spider):
-        self.file = open('../../movie_data/movie_list.jsonl', 'wb')
-        self.exporter = JsonLinesItemExporter(self.file) # TODO bug here
+        self.file = open("../../movie_data/movie_list.jsonl", "wb")
+        self.exporter = JsonLinesItemExporter(self.file)  # TODO bug here
         self.exporter.start_exporting()
 
     def process_item(self, item, spider):
         self.exporter.export_item(item)
         return item
-    
+
     def close_spider(self, spider):
         self.exporter.finish_exporting()
         self.file.close()
-
 
 
 # myproject/pipelines.py
@@ -37,8 +35,8 @@ class PipePipeline:
 
     @classmethod
     def from_crawler(cls, crawler):
-        # Get the pipe_end from the spider
-        spider = crawler.crawler.engine.spider
+        # Access the spider
+        spider = crawler.spider
         pipe_end = getattr(spider, "pipe_end", None)
         return cls(pipe_end)
 
@@ -49,54 +47,31 @@ class PipePipeline:
     def close_spider(self, spider):
         self.pipe_end.send("END")  # Send end signal
         self.pipe_end.close()  # Close the pipe end
-       
-
 
 
 class RabbitMQPipeline:
-    def __init__(self) -> None:
-        self._load_settings()
-        self.connection = None
-        self.channel = None
 
-    def _load_settings(self) -> None:
-        try:
-            with open("../../settings/settings.json", mode="r") as f:
-                settings = json.load(f)
-                self.messaging_host = settings["crawling"]["messaging"]["RABBITMQ_HOST"]
-                self.messaging_queue = settings["crawling"]["messaging"]["RABBITMQ_QUEUE"]
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logging.error(f"Failed to load settings: {e}")
-            raise
+    def __init__(self, rabbitmq_connection, rabbitmq_queue):
+        self.rabbitmq_connection = rabbitmq_connection
+        self.rabbitmq_queue = rabbitmq_queue
+        self.channel = self.rabbitmq_connection.channel()
 
-    def open_spider(self, spider) -> None:
-        try:
-            self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host=self.messaging_host, port=5672)
-            )
-            self.channel = self.connection.channel()
-            self.channel.queue_declare(queue=self.messaging_queue)
-            logging.info(f"Connected to RabbitMQ at {self.messaging_host}, queue declared: {self.messaging_queue}")
-        except Exception as e:
-            logging.error(f"Failed to connect to RabbitMQ: {e}")
-            raise
+    def send_message(self, exchange, queue, message):
+        self.channel.queue_declare(queue=queue)
+        self.channel.basic_publish(exchange=exchange, routing_key=queue, body=message)
 
-    def close_spider(self, spider) -> None:
-        if self.connection and self.connection.is_open:
-            try:
-                self.connection.close()
-                logging.info("Connection to RabbitMQ closed.")
-            except Exception as e:
-                logging.error(f"Failed to close RabbitMQ connection: {e}")
+    @classmethod
+    def from_crawler(cls, crawler):
+        # Access the spider
+        spider = crawler.spider
+        rabbitmq_connection = getattr(spider, "rabbitmq_connection", None)
+        rabbitmq_queue = getattr(spider, "rabbitmq_queue", None)
+        return cls(rabbitmq_connection, rabbitmq_queue)
 
-    def process_item(self, item, spider) -> dict:
-        try:
-            self.channel.basic_publish(
-                exchange='',
-                routing_key=self.messaging_queue,
-                body=json.dumps(dict(item), indent=4)
-            )
-            logging.info(f"Item sent to queue: {item}, routing key: {self.messaging_queue}, host: {self.messaging_host}")
-        except Exception as e:
-            logging.error(f"Failed to publish item to RabbitMQ: {e}")
-        return item
+    def process_item(self, item, spider):
+        # Publish the item to RabbitMQ
+        message = json.dumps(ItemAdapter(item).asdict())
+        self.send_message(exchange="", queue=self.rabbitmq_queue, message=message)
+
+    def close_spider(self, spider):
+        self.channel.close()

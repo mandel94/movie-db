@@ -3,49 +3,52 @@ from crawling_movies.loaders import MovieLoader
 from crawling_movies.items import MovieItem
 from datetime import datetime
 import uuid
+import logging
 
 
 class MovieSpider(scrapy.Spider):
-    name = "movie_spider"
+    name = "scrape_movie"
 
     custom_settings = {
         "ITEM_PIPELINES": {
             "crawling_movies.pipelines.RabbitMQPipeline": 300,
         },
+        "LOG_LEVEL": "ERROR",
     }
 
-    def __init__(self, item=None, *args, **kwargs):
+    def __init__(
+        self,
+        item_info=None,
+        rabbitmq_connection=None,
+        rabbitmq_queue=None,
+        *args,
+        **kwargs
+    ):
         super(MovieSpider, self).__init__(*args, **kwargs)
-        self.item = item
-        self.urls = {"wiki": item.get("wiki_href"), "jw": item.get("jw_href")}
+        self.item_info = item_info
+        self.rabbitmq_connection = rabbitmq_connection
+        self.rabbitmq_queue = rabbitmq_queue
+        self.urls = {
+            "wiki": self.item_info.get("wiki_href"),
+            "jw": self.item_info.get("jw_href"),
+        }
 
     def start_requests(self):
+        # This method must return an iterable with the first Requests to crawl for this spider.
+        # It is called by Scrapy when the spider is opened for scraping. Scrapy calls it only once, so it is safe to implement start_requests() as a generator.
         # Create a new MovieLoader and pass it through the meta attribute
         movie_loader = MovieLoader(item=MovieItem(), response=None)
-
         movie_loader.add_value("movie_id", self.generate_uuid())
 
-        still_to_process = len(self.urls)
-        for from_source, url in self.urls.items():
-            still_to_process -= 1
-            yield scrapy.Request(
-                url=url,
-                callback=self._parse(from_source),
-                meta={
-                    "movie_loader": movie_loader,
-                    "still_to_process": still_to_process,
-                },
-            )
-
-    def _parse(self, source):
-        if source == "wiki":
-            return self.parse_wiki
-        elif source == "jw":
-            return self.parse_jw
-        else:
-            return lambda response: None
+        initial_url = self.urls.get("wiki")  # Start scraping from wiki
+        yield scrapy.Request(
+            url=initial_url,
+            callback=self.parse_wiki,
+            meta={"movie_loader": movie_loader, "from_source": "wiki"},
+        )
 
     def parse_wiki(self, response):
+        # Parse the initial page and extract the title
         movie_loader = response.meta["movie_loader"]
         movie_loader.add_value("title", self.extract_title(response))
         movie_loader.add_value("original_title", self.extract_original_title(response))
@@ -68,10 +71,11 @@ class MovieSpider(scrapy.Spider):
         movie_loader.add_value("age_rating", self.extract_age_rating(response))
         movie_loader.add_value("imdb_id", self.extract_imdb_id(response))
         movie_loader.add_value("tmdb_id", self.extract_tmdb_id(response))
-        movie_loader.add_value("homepage", self.extract_homepage(response))
         movie_loader.add_value("updated_at", self.get_timestamp())
-        self._check_if_all_sources_processed(
-            response.meta["still_to_process"], response
+        yield scrapy.Request(
+            url=self.urls.get("jw"),
+            callback=self.parse_jw,
+            meta={"movie_loader": movie_loader},
         )
 
     def parse_jw(self, response):
@@ -79,13 +83,22 @@ class MovieSpider(scrapy.Spider):
         # Extract data specific to the JW source
         # For example, if JW provides additional info, update the movie_loader here
         # movie_loader.add_value('additional_info', self.extract_additional_info(response))
-        self._check_if_all_sources_processed(
-            response.meta["still_to_process"], response
-        )
+        movie_loader.add_value("homepage", self.extract_homepage(response))
+        # Get back to parse_wiki to extract the next source
+        # yield scrapy.Request(
+        #     url=self.urls.get("imdb"),
+        #     callback=self.parse_imdb,
+        #     meta={"movie_loader": movie_loader}
+        # )
+        return movie_loader.load_item()
 
-    def _check_if_all_sources_processed(self, still_to_process, response):
-        if still_to_process == 0:
-            yield response.meta["movie_loader"].load_item()
+    def parse_imdb(self, response):
+        movie_loader = response.meta["movie_loader"]
+        # Extract data specific to the IMDB source
+        # For example, if IMDB provides additional info, update the movie_loader here
+        # movie_loader.add_value('additional_info', self.extract_additional_info(response))
+        # Save the item
+        return movie_loader.load_item()
 
     def generate_uuid(self):
         return str(uuid.uuid4())
