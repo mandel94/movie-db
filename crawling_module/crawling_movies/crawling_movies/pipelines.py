@@ -51,9 +51,10 @@ class PipePipeline:
 
 class RabbitMQPipeline:
 
-    def __init__(self, rabbitmq_connection, rabbitmq_queue):
+    def __init__(self, rabbitmq_connection, rabbitmq_queue, rabbitmq_exchange):
         self.rabbitmq_connection = rabbitmq_connection
         self.rabbitmq_queue = rabbitmq_queue
+        self.rabbitmq_exchange = rabbitmq_exchange
         self.channel = self.rabbitmq_connection.channel()
 
     def send_message(self, exchange, queue, message):
@@ -66,7 +67,8 @@ class RabbitMQPipeline:
         spider = crawler.spider
         rabbitmq_connection = getattr(spider, "rabbitmq_connection", None)
         rabbitmq_queue = getattr(spider, "rabbitmq_queue", None)
-        return cls(rabbitmq_connection, rabbitmq_queue)
+        rabbitmq_exchange = getattr(spider, "rabbitmq_exchange", None)
+        return cls(rabbitmq_connection, rabbitmq_queue, rabbitmq_exchange)
 
     def process_item(self, item, spider):
         # Publish the item to RabbitMQ

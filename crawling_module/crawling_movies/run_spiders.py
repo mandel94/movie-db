@@ -63,7 +63,12 @@ if __name__ == "__main__":
     # Create second process that handles movie data and creates movie items
     movie_process = multiprocessing.Process(
         target=scrape_movie_item,
-        args=(parent_conn, rabbitmq_connection, rabbitmq_settings["RABBITMQ_QUEUE"]),
+        args=(
+            parent_conn,
+            rabbitmq_connection,
+            rabbitmq_settings["MOVIES"]["QUEUE"],
+            rabbitmq_settings["MOVIES"]["EXCHANGE"],
+        ),
     )
     movie_process.start()
 

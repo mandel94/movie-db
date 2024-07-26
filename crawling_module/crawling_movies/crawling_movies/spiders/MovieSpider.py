@@ -21,6 +21,7 @@ class MovieSpider(scrapy.Spider):
         item_info=None,
         rabbitmq_connection=None,
         rabbitmq_queue=None,
+        rabbitmq_exchange=None,
         *args,
         **kwargs
     ):
@@ -28,6 +29,7 @@ class MovieSpider(scrapy.Spider):
         self.item_info = item_info
         self.rabbitmq_connection = rabbitmq_connection
         self.rabbitmq_queue = rabbitmq_queue
+        self.rabbitmq_exchange = rabbitmq_exchange
         self.urls = {
             "wiki": self.item_info.get("wiki_href"),
             "jw": self.item_info.get("jw_href"),
