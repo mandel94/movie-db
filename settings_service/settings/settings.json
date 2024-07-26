@@ -1,0 +1,11 @@
+{
+    "crawling": {
+        "messaging": {
+            "RABBITMQ_HOST": "message_broker",
+            "RABBITMQ_QUEUE": "items_queue",
+            "RABBITMQ_USER": "guest",
+            "RABBITMQ_PASSWORD": "guest",
+            "RABBITMQ_PORT": 5672
+        }
+    }
+}
